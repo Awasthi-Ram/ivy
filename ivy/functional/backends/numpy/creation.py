@@ -29,7 +29,7 @@ def arange(
     step: float = 1,
     *,
     dtype: Optional[np.dtype] = None,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     if dtype:
@@ -56,7 +56,7 @@ def asarray(
     *,
     copy: Optional[bool] = None,
     dtype: Optional[np.dtype] = None,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     ret = np.asarray(obj, dtype=dtype)
@@ -67,7 +67,7 @@ def empty(
     shape: Union[ivy.NativeShape, Sequence[int]],
     *,
     dtype: np.dtype,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     return np.empty(shape, dtype)
@@ -78,7 +78,7 @@ def empty_like(
     /,
     *,
     dtype: np.dtype,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     return np.empty_like(x, dtype=dtype)
@@ -92,7 +92,7 @@ def eye(
     k: int = 0,
     batch_shape: Optional[Union[int, Sequence[int]]] = None,
     dtype: np.dtype,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     if n_cols is None:
@@ -111,8 +111,20 @@ def to_dlpack(x, /, *, out: Optional[np.ndarray] = None):
     return x.__dlpack__()
 
 
+class _dlpack_wrapper:
+    def __init__(self, capsule) -> None:
+        self.capsule = capsule
+
+    def dlpack(self):
+        return self.capsule
+
+
 def from_dlpack(x, /, *, out: Optional[np.ndarray] = None):
-    return np.from_dlpack(x)
+    if not hasattr(x, "__dlpack__"):
+        capsule = _dlpack_wrapper(x)
+    else:
+        capsule = x
+    return np.from_dlpack(capsule)
 
 
 def full(
@@ -120,7 +132,7 @@ def full(
     fill_value: Union[int, float, bool],
     *,
     dtype: Optional[Union[ivy.Dtype, np.dtype]] = None,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     dtype = ivy.default_dtype(dtype=dtype, item=fill_value, as_native=True)
@@ -133,7 +145,7 @@ def full_like(
     fill_value: Number,
     *,
     dtype: np.dtype,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     return np.full_like(x, fill_value, dtype=dtype)
@@ -148,7 +160,7 @@ def linspace(
     axis: Optional[int] = None,
     endpoint: bool = True,
     dtype: np.dtype,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     if axis is None:
@@ -177,7 +189,7 @@ def ones(
     shape: Union[ivy.NativeShape, Sequence[int]],
     *,
     dtype: np.dtype,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     return np.ones(shape, dtype)
@@ -188,7 +200,7 @@ def ones_like(
     /,
     *,
     dtype: np.dtype,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     return np.ones_like(x, dtype=dtype)
@@ -210,7 +222,7 @@ def zeros(
     shape: Union[ivy.NativeShape, Sequence[int]],
     *,
     dtype: np.dtype,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     return np.zeros(shape, dtype)
@@ -221,7 +233,7 @@ def zeros_like(
     /,
     *,
     dtype: np.dtype,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     return np.zeros_like(x, dtype=dtype)
@@ -254,7 +266,7 @@ def one_hot(
     off_value: Optional[Number] = None,
     axis: Optional[int] = None,
     dtype: Optional[np.dtype] = None,
-    device: str = None,
+    device: Optional[str] = None,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     on_none = on_value is None
@@ -298,6 +310,6 @@ def triu_indices(
     k: int = 0,
     /,
     *,
-    device: str = None,
+    device: Optional[str] = None,
 ) -> Tuple[np.ndarray]:
     return tuple(np.asarray(np.triu_indices(n=n_rows, k=k, m=n_cols)))
